@@ -1,16 +1,20 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import Card from '../models/card';
+import {
+  NotFoundError,
+  ForbiddenError,
+} from '../models/errors';
 
-export const getCards = async (req: Request, res: Response) => {
+export const getCards = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const cards = await Card.find({});
     res.status(200).json(cards);
   } catch (error) {
-    res.status(500).send({ message: 'Ошибка при получении карточек', error });
+    next(error);
   }
 };
 
-export const createCard = async (req: Request, res: Response) => {
+export const createCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, link } = req.body;
     const owner = req.user?._id;
@@ -19,26 +23,32 @@ export const createCard = async (req: Request, res: Response) => {
     const savedCard = await card.save();
     res.status(201).json(savedCard);
   } catch (error) {
-    res.status(500).send({ message: 'Ошибка при создании карточки', error });
+    next(error);
   }
 };
 
-export const deleteCard = async (req: Request, res: Response) => {
+export const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const card = await Card.findByIdAndDelete(req.params.cardId);
+    const cardId = req.params.cardId;
+    const userId = req.user?._id;
+    const card = await Card.findOne({ _id: cardId });
+
     if (!card) {
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     }
-    res.status(200).send({ message: 'Карточка удалена' });
+    if (card.owner.toString() !== userId) {
+      throw new ForbiddenError('Недостаточно прав');
+    }
+
+    await Card.findByIdAndDelete(cardId);
+
+    res.status(200).json({ message: 'Карточка удалена' });
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      return res.status(400).send({ message: 'Некорректный ID карточки' });
-    }
-    res.status(500).send({ message: 'Ошибка при удалении карточки', error });
+    next(error);
   }
 };
 
-export const likeCard = async (req: Request, res: Response) => {
+export const likeCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -46,18 +56,15 @@ export const likeCard = async (req: Request, res: Response) => {
       { new: true, runValidators: true, strict: "throw" }
     );
     if (!card) {
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     }
     res.status(200).json(card);
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      return res.status(400).send({ message: 'Некорректный ID карточки' });
-    }
-    res.status(500).send({ message: 'Ошибка при добавлении лайка', error });
+    next(error);
   }
 };
 
-export const deleteCardLike = async (req: Request, res: Response) => {
+export const deleteCardLike = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
@@ -65,13 +72,10 @@ export const deleteCardLike = async (req: Request, res: Response) => {
       { new: true, runValidators: true, strict: "throw" }
     );
     if (!card) {
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     }
     res.status(200).json(card);
   } catch (error) {
-    if (error instanceof Error && error.name === 'CastError') {
-      return res.status(400).send({ message: 'Некорректный ID карточки' });
-    }
-    res.status(500).send({ message: 'Ошибка при удалении лайка', error });
+    next(error);
   }
 };
