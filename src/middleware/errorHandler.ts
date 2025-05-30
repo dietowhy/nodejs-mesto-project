@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction} from 'express';
 import { Error as MongoError } from 'mongoose';
 import {
   NotFoundError,
@@ -12,6 +12,7 @@ export const errorHandler = (
   err: Error | MongoError,
   req: Request,
   res: Response,
+  next: NextFunction
 ) => {
   if (
     err instanceof NotFoundError ||
@@ -41,4 +42,6 @@ export const errorHandler = (
   res.status(500).json({
     message: 'На сервере произошла ошибка',
   });
+
+  next();
 };

@@ -37,7 +37,9 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
     const hashPassword = await bcrypt.hash(password, 10);
 
     const user = await User.create({ name, about, avatar, email, password: hashPassword });
-    res.status(201).json(user);
+    const userWithoutPassword = await User.findById(user._id).select('-password');
+
+    res.status(201).json(userWithoutPassword);
   } catch (error) {
     if (error instanceof MongoError && error.code === 11000) {
       next(new ConflictError('Пользователь с таким email уже существует'));
@@ -108,6 +110,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       secure: true,
     });
 
+    res.status(200).json({ message: 'Авторизация прошла успешно' });
   } catch (error) {
     next(error);
   }

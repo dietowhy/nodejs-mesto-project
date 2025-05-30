@@ -8,6 +8,7 @@ import { createUser, login } from './controllers/userController';
 import { requestLog, errorLog } from './middleware/logger';
 import auth from './middleware/auth';
 import {} from './types/express'
+import { errors } from 'celebrate';
 import {
   validateCreateUser,
   validateLogin,
@@ -32,6 +33,7 @@ app.use(auth);
 app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
+app.use(errors());
 app.use(errorLog);
 
 app.use(errorHandler);

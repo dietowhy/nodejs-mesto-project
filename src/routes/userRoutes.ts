@@ -6,7 +6,6 @@ import {
   updateAvatar,
   getCurrentUser
 } from '../controllers/userController';
-import auth from '../middleware/auth';
 import {
   validateAvatarUpdate,
   validateUserId,
@@ -16,8 +15,8 @@ import {
 const router = Router();
 
 router.get('/', getUsers);
+router.get('/me', getCurrentUser);
 router.get('/:userId', validateUserId, getUserById);
-router.get('/me', auth, getCurrentUser);
 router.patch('/me', validateUserUpdate, updateUser);
 router.patch('/me/avatar', validateAvatarUpdate, updateAvatar);
 

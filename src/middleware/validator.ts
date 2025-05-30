@@ -19,7 +19,7 @@ export const validateCreateUser = celebrate({
 
 export const validateUserId = celebrate({
   [Segments.PARAMS]: Joi.object({
-    id: Joi.string().alphanum().required().length(24),
+    userId: Joi.string().alphanum().required().length(24),
   }),
 })
 
@@ -48,6 +48,6 @@ export const validateCreateCard = celebrate({
 
 export const validateCardId = celebrate({
   [Segments.PARAMS]: Joi.object().keys({
-    id: Joi.string().alphanum().required().length(24),
+    cardId: Joi.string().alphanum().required().length(24),
   }),
 })
